@@ -22,10 +22,10 @@ public class TomlParser {
         return fromToml(new Toml().read(string));
     }
 
-    public static TomlObject fromToml(Toml toml) {
+    public static @NotNull TomlObject fromToml(@NotNull Toml toml) {
         TomlObject result = new TomlObject();
         for (Map.Entry<String, Object> entry : toml.entrySet()) {
-            result.put(entry.getKey(), fromObject(entry.getValue()));
+            result.put(removeEscapeChars(entry.getKey()), fromObject(entry.getValue()));
         }
         return result;
     }
@@ -46,7 +46,7 @@ public class TomlParser {
             TomlObject result = new TomlObject();
             for (Object entry : map.keySet()) {
                 if (entry instanceof String key) {
-                    result.put(key, fromObject(map.get(key)));
+                    result.put(removeEscapeChars(key), fromObject(map.get(key)));
                 } else {
                     throw new IllegalStateException("Only string are allowed keys for TOML files!");
                 }
@@ -78,10 +78,10 @@ public class TomlParser {
             if (parent != null && entrySet.stream().anyMatch(entry -> !(entry.getValue() instanceof TomlObject)) && !nestedArray) {
                 stringBuilder.append("[").append(parent).append("]").append("\n");
             }
-            entrySet.forEach(entry ->
-                    stringJoiner.add((entry.getValue() instanceof TomlObject && !nestedArray ? "" : entry.getKey() + " = ") +
+            entrySet.stream().sorted((e1, e2) -> (e1.getValue() instanceof TomlObject && e2.getValue() instanceof TomlObject) ? e1.getKey().compareTo(e2.getKey()) : e1.getValue() instanceof TomlObject ? 1 : e2.getValue() instanceof TomlObject ? -1 : e1.getKey().compareTo(e2.getKey())).forEach(entry ->
+                    stringJoiner.add((entry.getValue() instanceof TomlObject && !nestedArray ? "" : escapeKey(entry.getKey()) + " = ") +
                             toString(entry.getValue(), nestedArray,
-                                    parent == null ? entry.getKey() : parent + "." + entry.getKey())));
+                                    parent == null ? entry.getKey() : parent + "." + escapeKey(entry.getKey()))));
             stringBuilder.append(stringJoiner);
             if (nestedArray) {
                 stringBuilder.append("}");
@@ -106,5 +106,24 @@ public class TomlParser {
             return String.valueOf(primitive.value);
         }
         return "";
+    }
+
+    private static String escapeKey(@NotNull String key) {
+        for(int i = 0; i < key.length(); i++) {
+            if(!validNamespaceChar(key.charAt(i))){
+                return "\"" + key + "\"";
+            }
+        }
+        return key;
+    }
+
+    private static boolean validNamespaceChar(char c) {
+        return c == '_' || c == '-' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9';
+    }
+
+    private static @NotNull String removeEscapeChars(@NotNull String string) {
+        if(string.startsWith("\"") && string.endsWith("\""))
+            return string.substring(1, string.length() - 1);
+        return string;
     }
 }

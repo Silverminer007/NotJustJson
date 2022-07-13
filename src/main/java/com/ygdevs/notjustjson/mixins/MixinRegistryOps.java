@@ -111,10 +111,14 @@ public class MixinRegistryOps {
             }
 
             private <E> DataResult<RegistryResourceAccess.ParsedEntry<E>> decodeElement(DynamicOps<JsonElement> jsonOps, @NotNull PackType<?> packType, Decoder<E> decoder, Reader reader, ResourceKey<?> key) throws IOException {
-                JsonElement jsonelement = packType.parse(reader);
-                if (jsonelement != null)
-                    jsonelement.getAsJsonObject().addProperty("forge:registry_name", key.location().toString());
-                return decoder.parse(jsonOps, jsonelement).map(RegistryResourceAccess.ParsedEntry::createWithoutId);
+                try {
+                    JsonElement jsonelement = packType.parse(reader);
+                    if (jsonelement != null)
+                        jsonelement.getAsJsonObject().addProperty("forge:registry_name", key.location().toString());
+                    return decoder.parse(jsonOps, jsonelement).map(RegistryResourceAccess.ParsedEntry::createWithoutId);
+                } catch(RuntimeException e) {
+                    return DataResult.error("Failed to load [" + key.location() + "] due to [" + e + "]");
+                }
             }
 
             private static String registryDirPath(ResourceLocation p_214240_) {
