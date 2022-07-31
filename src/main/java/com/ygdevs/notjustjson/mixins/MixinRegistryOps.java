@@ -1,14 +1,12 @@
 package com.ygdevs.notjustjson.mixins;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Decoder;
 import com.mojang.serialization.DynamicOps;
 import com.ygdevs.notjustjson.NotJustJson;
-import com.ygdevs.notjustjson.util.PackType;
-import com.ygdevs.notjustjson.util.PackTypeRegistry;
+import com.ygdevs.notjustjson.util.FileType;
+import com.ygdevs.notjustjson.util.FileTypeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.RegistryResourceAccess;
@@ -37,8 +35,8 @@ public class MixinRegistryOps {
             public <E> @NotNull Map<ResourceKey<E>, RegistryResourceAccess.EntryThunk<E>> listResources(@NotNull ResourceKey<? extends Registry<E>> key) {
                 String s = registryDirPath(key.location());
                 Map<ResourceKey<E>, RegistryResourceAccess.EntryThunk<E>> map = new HashMap<>();
-                for (PackType<?> packType : PackTypeRegistry.ordered()) {
-                    String suffix = "." + packType.name();
+                for (FileType<?> fileType : FileTypeRegistry.ordered()) {
+                    String suffix = "." + fileType.name();
                     p_195882_.listResources(s, (p_214262_) -> p_214262_.getPath().endsWith(suffix)).forEach((resourceLocation, resource) -> {
                         String s1 = resourceLocation.getPath();
                         String s2 = s1.substring(s.length() + 1, s1.length() - suffix.length());
@@ -52,7 +50,7 @@ public class MixinRegistryOps {
 
                                     DataResult<ParsedEntry<E>> dataresult;
                                     try {
-                                        dataresult = this.decodeElement(jsonOps, packType, decoder, reader, key);
+                                        dataresult = this.decodeElement(jsonOps, fileType, decoder, reader, key);
                                     } catch (Throwable throwable1) {
                                         try {
                                             reader.close();
@@ -77,8 +75,8 @@ public class MixinRegistryOps {
             }
 
             public <E> @NotNull Optional<RegistryResourceAccess.EntryThunk<E>> getResource(@NotNull ResourceKey<E> resourceKey) {
-                for (PackType<?> packType : PackTypeRegistry.ordered()) {
-                    ResourceLocation resourcelocation = elementPath(resourceKey, "." + packType.name());
+                for (FileType<?> fileType : FileTypeRegistry.ordered()) {
+                    ResourceLocation resourcelocation = elementPath(resourceKey, "." + fileType.name());
                     Optional<Resource> optionalResource = p_195882_.getResource(resourcelocation);
                     if (optionalResource.isPresent()) {
                         return optionalResource.map((resource) -> (jsonOps, decoder) -> {
@@ -87,7 +85,7 @@ public class MixinRegistryOps {
 
                                 DataResult<ParsedEntry<E>> dataresult;
                                 try {
-                                    dataresult = this.decodeElement(jsonOps, packType, decoder, reader, resourceKey);
+                                    dataresult = this.decodeElement(jsonOps, fileType, decoder, reader, resourceKey);
                                 } catch (Throwable throwable1) {
                                     try {
                                         reader.close();
@@ -110,13 +108,13 @@ public class MixinRegistryOps {
                 return Optional.empty();
             }
 
-            private <E> DataResult<RegistryResourceAccess.ParsedEntry<E>> decodeElement(DynamicOps<JsonElement> jsonOps, @NotNull PackType<?> packType, Decoder<E> decoder, Reader reader, ResourceKey<?> key) throws IOException {
+            private <E> DataResult<RegistryResourceAccess.ParsedEntry<E>> decodeElement(DynamicOps<JsonElement> jsonOps, @NotNull FileType<?> fileType, Decoder<E> decoder, Reader reader, ResourceKey<?> key) throws IOException {
                 try {
-                    JsonElement jsonelement = packType.parse(reader);
+                    JsonElement jsonelement = fileType.parse(reader);
                     if (jsonelement != null)
                         jsonelement.getAsJsonObject().addProperty("forge:registry_name", key.location().toString());
                     return decoder.parse(jsonOps, jsonelement).map(RegistryResourceAccess.ParsedEntry::createWithoutId);
-                } catch(RuntimeException e) {
+                } catch (RuntimeException e) {
                     return DataResult.error("Failed to load [" + key.location() + "] due to [" + e + "]");
                 }
             }

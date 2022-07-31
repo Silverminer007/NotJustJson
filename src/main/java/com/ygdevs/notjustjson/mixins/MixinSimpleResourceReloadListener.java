@@ -1,8 +1,8 @@
 package com.ygdevs.notjustjson.mixins;
 
 import com.google.gson.JsonElement;
-import com.ygdevs.notjustjson.util.PackType;
-import com.ygdevs.notjustjson.util.PackTypeRegistry;
+import com.ygdevs.notjustjson.util.FileType;
+import com.ygdevs.notjustjson.util.FileTypeRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -33,11 +33,11 @@ public class MixinSimpleResourceReloadListener {
     @SuppressWarnings({"unchecked", "raw"})
     @Inject(at = @At(value = "RETURN"), method = "prepare(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)Ljava/util/Map;", locals = LocalCapture.CAPTURE_FAILSOFT)
     private void notjustjson_inject_prepare(ResourceManager p_10771_, ProfilerFiller p_10772_, CallbackInfoReturnable<Map<ResourceLocation, JsonElement>> cir, Map map) {
-        for (PackType<?> packType : PackTypeRegistry.ordered()) {
-            if(packType.name().equals("json")) {
+        for (FileType<?> fileType : FileTypeRegistry.ordered()) {
+            if(fileType.name().equals("json")) {
                 continue;
             }
-            String suffix = "." + packType.name();
+            String suffix = "." + fileType.name();
             int pathSuffixLength = suffix.length();
             for (Map.Entry<ResourceLocation, Resource> entry : p_10771_.listResources(this.directory, (p_215600_) -> p_215600_.getPath().endsWith(suffix)).entrySet()) {
                 ResourceLocation key = entry.getKey();
@@ -50,7 +50,7 @@ public class MixinSimpleResourceReloadListener {
                         if(map.containsKey(keyWithoutSuffix)) {
                             LOGGER.error("Failed to add data file {} from {}, because the key already existed with another suffix", keyWithoutSuffix, key);
                         } else {
-                            map.put(keyWithoutSuffix, packType.parse(resourceReader));
+                            map.put(keyWithoutSuffix, fileType.parse(resourceReader));
                         }
                     } catch (Throwable throwable1) {
                         try {
