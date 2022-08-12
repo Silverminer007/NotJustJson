@@ -3,10 +3,10 @@ package com.ygdevs.notjustjson;
 import com.mojang.logging.LogUtils;
 import com.ygdevs.notjustjson.datagen.PackTypedWorldgenReport;
 import com.ygdevs.notjustjson.util.FileTypeRegistry;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.slf4j.Logger;
 
 @Mod(NotJustJson.MODID)
