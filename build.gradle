@@ -8,6 +8,7 @@ plugins {
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '5.1.+'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id "org.cadixdev.licenser" version "0.6.+"
 }
 
 apply plugin: 'org.spongepowered.mixin'
@@ -17,6 +18,14 @@ group = 'com.ygdevs.notjustjson' // http://maven.apache.org/guides/mini/guide-na
 archivesBaseName = 'notjustjson'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+license {
+    header = project.file('HEADER.txt')
+    properties {
+        name = 'Silverminer007'
+        year = 2022
+    }
+}
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
