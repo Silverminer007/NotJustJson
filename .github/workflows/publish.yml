@@ -16,13 +16,6 @@ on:
           - 'alpha'
           - 'beta'
           - 'release'
-      minecraftVersion:
-        type: choice
-        required: true
-        description: "Mc Version"
-        default: '1.19'
-        options:
-          - '1.19'
       branch:
         type: choice
         required: true
@@ -34,7 +27,7 @@ on:
 env:
   CURSEFORGE: ${{ secrets.CURSEFORGE_TOKEN }}
   MODRINTH: ${{ secrets.MODRINTH_TOKEN }}
-  MC_VERSION: ${{ github.event.inputs.minecraftVersion }}
+  notjustjson_version: ${{ github.event.inputs.version }}
 
 jobs:
   build:
@@ -104,12 +97,12 @@ jobs:
         with:
           file_path: build/libs/notjustjson-${{ github.event.inputs.version }}.jar
           game_endpoint: "minecraft"
-          project_id: "418915"
+          project_id: "659678"
           token: ${{ secrets.CURSEFORGE_TOKEN }}
           changelog_type: "markdown"
           changelog: ${{ steps.split.outputs._0}}
           release_type: ${{ github.event.inputs.releaseType }}
-          game_versions: "Minecraft 1.19:1.19,java:Java 17,java:Java 18,Forge"
+          game_versions: "Minecraft 1.19:1.19.2,java:Java 17,java:Java 18,Forge"
       - name: Upload files to GitHub
         uses: softprops/action-gh-release@v1
         with:
