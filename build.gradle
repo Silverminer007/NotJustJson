@@ -17,7 +17,7 @@ version = {
     if(System.getenv("notjustjson_version")) {
         return System.getenv("notjustjson_version")
     }
-    return "19.0.0.0.0"
+    return "19.0.0.0.5"
 }
 group = 'com.ygdevs.notjustjson' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'notjustjson'
