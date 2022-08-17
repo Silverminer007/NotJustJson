@@ -9,6 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id "org.cadixdev.licenser" version "0.6.+"
+    id "com.modrinth.minotaur" version "2.+"
 }
 
 apply plugin: 'org.spongepowered.mixin'
@@ -17,7 +18,7 @@ apply plugin: 'org.spongepowered.mixin'
 if (System.getenv("notjustjson_version")) {
     version = System.getenv("notjustjson_version")
 } else {
-    version = "19.0.0.0.5"
+    version = "19.0.0.0.6"
 }
 group = 'com.ygdevs.notjustjson' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'notjustjson'
@@ -178,4 +179,20 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
+modrinth {
+    token = System.getenv("MODRINTH")
+    projectId = "notjustjson"
+    if(System.getenv("notjustjson_release_channel")) {
+        versionType = System.getenv("notjustjson_release_channel")
+    } else {
+        versionType = "alpha"
+    }
+    uploadFile = jar
+    gameVersions = ["1.19.2"]
+    syncBodyFrom = rootProject.file("README.md").text
+    def changelogFile = file('changelog.md').text
+    changelog = changelogFile.substring(0, changelogFile.contains('===') ? changelogFile.indexOf("===") : changelogFile.length())
 }
