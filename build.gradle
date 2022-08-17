@@ -13,15 +13,14 @@ plugins {
 
 apply plugin: 'org.spongepowered.mixin'
 
-version = {
-    if(System.getenv("notjustjson_version")) {
-        return System.getenv("notjustjson_version")
-    }
-    return "19.0.0.0.5"
+
+if (System.getenv("notjustjson_version")) {
+    version = System.getenv("notjustjson_version")
+} else {
+    version = "19.0.0.0.5"
 }
 group = 'com.ygdevs.notjustjson' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'notjustjson'
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 license {
@@ -120,7 +119,7 @@ minecraft.runs.all {
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    library ('com.moandjiezana.toml:toml4j:0.7.2') {
+    library('com.moandjiezana.toml:toml4j:0.7.2') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
     library 'org.yaml:snakeyaml:1.30'
