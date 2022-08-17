@@ -1,0 +1,117 @@
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: 'The version to publish'
+        default: ''
+      releaseType:
+        required: true
+        description: "alpha, beta or release"
+        default: 'alpha'
+        type: choice
+        options:
+          - 'alpha'
+          - 'beta'
+          - 'release'
+      minecraftVersion:
+        type: choice
+        required: true
+        description: "Mc Version"
+        default: '1.19'
+        options:
+          - '1.19'
+      branch:
+        type: choice
+        required: true
+        description: ""
+        default: 'master'
+        options:
+          - 'master'
+
+env:
+  CURSEFORGE: ${{ secrets.CURSEFORGE_TOKEN }}
+  MODRINTH: ${{ secrets.MODRINTH_TOKEN }}
+  MC_VERSION: ${{ github.event.inputs.minecraftVersion }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: 'Publish'
+    steps:
+      - name: Get current time
+        uses: srfrnk/current-time@master
+        id: current-time
+        with:
+          format: DD.MM.YYYY HH:mm [UTC]
+      - name: Git checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17.0.1'
+          distribution: temurin
+          cache: 'gradle'
+      - name: Echo JAVA_HOME
+        run: echo $JAVA_HOME
+      - name: Verify Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Run Tests
+        run: ./gradlew --info --stacktrace runGameTestServer
+      - name: Execute build
+        run: ./gradlew --info --stacktrace build
+      - name: Create Tag
+        id: create_tag
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git tag ${{ github.event.inputs.version }} -a -m ${{ github.event.inputs.version }}
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.event.inputs.branch }}
+          tags: true
+      - name: read changelog file
+        uses: juliangruber/read-file-action@v1
+        id: changelog
+        with:
+          path: ./changelog.md
+      - name: Split Changelog
+        id: split
+        uses: rishabhgupta/split-by@v1
+        with:
+          string: ${{ steps.changelog.outputs.content }}
+          split-by: "==========="
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: release ${{ github.event.inputs.version }} --- ${{ steps.current-time.outputs.formattedTime }}
+          tag: ${{ github.event.inputs.version }}
+          body: |
+            ![GitHub release (by tag)](https://img.shields.io/github/downloads/Silverminer007/NotJustJson/${{ github.event.inputs.version }}/total)
+            ${{ steps.split.outputs._0}}
+#      - name: Upload files to modrinth
+#        run: ./gradlew --info --stacktrace modrinth
+      - name: Upload files to curseforge
+        id: curseforge
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          file_path: build/libs/notjustjson-${{ github.event.inputs.version }}.jar
+          game_endpoint: "minecraft"
+          project_id: "418915"
+          token: ${{ secrets.CURSEFORGE_TOKEN }}
+          changelog_type: "markdown"
+          changelog: ${{ steps.split.outputs._0}}
+          release_type: ${{ github.event.inputs.releaseType }}
+          game_versions: "Minecraft 1.19:1.19,java:Java 17,java:Java 18,Forge"
+      - name: Upload files to GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/libs/*.jar
+          tag_name: ${{ github.event.inputs.version }}
