@@ -44,7 +44,7 @@ public class PackTypedWorldgenReport implements DataProvider {
         }
     }
 
-    private <T, F> void dumpRegistryCap(CachedOutput cachedOutput, @NotNull RegistryAccess registryAccess, FileType<F> fileType, RegistryAccess.@NotNull RegistryData<T> registryData) {
+    private <T, F> void dumpRegistryCap(CachedOutput cachedOutput, @NotNull RegistryAccess registryAccess, @NotNull FileType<F> fileType, RegistryAccess.@NotNull RegistryData<T> registryData) {
         ResourceKey<? extends Registry<T>> resourcekey = registryData.key();
         Registry<T> registry = registryAccess.ownedRegistryOrThrow(resourcekey);
         DataGenerator.PathProvider datagenerator$pathprovider = this.generator.createPathProvider(DataGenerator.Target.REPORTS, net.minecraftforge.common.ForgeHooks.prefixNamespace(resourcekey.location())); // FORGE: Custom data-pack registries are prefixed with their namespace
@@ -68,6 +68,7 @@ public class PackTypedWorldgenReport implements DataProvider {
 
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     static <T> void saveStable(@NotNull CachedOutput cachedOutput, @NotNull T o, @NotNull FileType<T> fileType, Path path) throws IOException {
         byte[] bytes = fileType.serializer().apply(o);
         cachedOutput.writeIfNeeded(path, bytes, Hashing.sha1().hashBytes(bytes));
